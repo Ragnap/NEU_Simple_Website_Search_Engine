@@ -1,4 +1,5 @@
 #include "cppjieba/include/cppjieba/Jieba.hpp"
+#include "myTrie.hpp"
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -14,8 +15,8 @@ const char* const REMOVE_WORD_PATH = "./simple_website_search_engine/wordSegmeta
 //数据文件储存路径
 const char* const TEXT_PATH = "./simple_website_search_engine/websiteText.txt";  //文本路径
 const char* const OUTPUT_TEMP_TEXT_PATH = "./simple_website_search_engine/tempIndex/tempIndex";  //临时索引文件夹路径
-const char* const WORD_MAP_PATH = "./simple_website_search_engine/mapWord.txt";  //单词编号文件
-const char* const WEBSITE_MAP_PATH = "./simple_website_search_engine/mapWebsite.txt";  //网站编号文件
+const char* const WORD_DICT_PATH = "./simple_website_search_engine/mapWord.txt";  //单词编号文件
+const char* const WEBSITE_DICT_PATH = "./simple_website_search_engine/mapWebsite.txt";  //网站编号文件
 #define REMOVE_MEANLESS_WORD 1  //当值为1时移除无意义词
 #define PAGE_PER_FILE 50  //一个临时索引文件中网页的数量
 //基于jieba的中文分词器
@@ -33,7 +34,9 @@ public:
         if(REMOVE_MEANLESS_WORD) {
             vector<string> temp;
             for(auto nowWord: res) {
-                if(removeWord[nowWord] != 1)  //检查是否在无意义词表里
+                //检查是否在无意义词表里
+                // if(removeWord[nowWord] != 1)  // map实现
+                if(!removeWord.check(nowWord))  // trie实现
                     temp.push_back(nowWord);
             }
             return temp;
@@ -46,34 +49,37 @@ public:
         ifstream in(REMOVE_WORD_PATH);
         string word;
         while(in >> word) {
-            removeWord[word] = 1;
+            // removeWord[word] = 1;
+            removeWord.insert(word);
         }
     }
 
 private:
     cppjieba::Jieba tool;  // jieba分词类
-    map<string, bool> removeWord;  //无意义词表
+    // map<string, bool> removeWord;  // 无意义词表,map实现
+    Trie removeWord;  // 无意义词表,trie实现
 } wordSeg;
+
 //储存单词和单词编号的映射
 class WordMap {
 public:
     WordMap() {
         wordCnt = 0;
-        map.clear();
+        dict.clear();
     }
     //查询是否在映射表里，在的话返回对应编号，否则返回0
     int find(string word) {
         for(int i = 0; i < wordCnt; i++) {
-            if(word == map[i])
+            if(word == dict[i])
                 return i + 1;
         }
-        return 0;
+        return -1;
     }
     //获取一个单词的编号
     int getID(string word) {
         int ID = find(word);
-        if(ID == 0) {
-            map.push_back(word);
+        if(ID == -1) {
+            dict.push_back(word);
             return ++wordCnt;
         }
         else
@@ -81,44 +87,46 @@ public:
     }
     //输出到文件
     void saveToFile() {
-        ofstream outputFile(WORD_MAP_PATH);
+        ofstream outputFile(WORD_DICT_PATH);
         outputFile << wordCnt << endl;
         for(int i = 0; i < wordCnt; i++) {
-            outputFile << i + 1 << " " << map[i] << endl;
+            outputFile << i + 1 << " " << dict[i] << endl;
         }
         outputFile.close();
     }
 
 private:
     int wordCnt;
-    vector<string> map;
-} wordMap;
+    vector<string> dict;  //总词典
+
+} wordDict;
 //储存网站和网站编号的映射
 class WebsiteMap {
 public:
     WebsiteMap() {
         websiteCnt = 0;
-        map.clear();
+        dict.clear();
     }
     //在尾部增加一个网站
     void push_back(string word) {
         websiteCnt++;
-        map.push_back(word);
+        dict.push_back(word);
     }
     //输出到文件
     void saveToFile() {
-        ofstream outputFile(WEBSITE_MAP_PATH);
+        ofstream outputFile(WEBSITE_DICT_PATH);
         outputFile << websiteCnt << endl;
         for(int i = 0; i < websiteCnt; i++) {
-            outputFile << i + 1 << " " << map[i] << endl;
+            outputFile << i + 1 << " " << dict[i] << endl;
         }
         outputFile.close();
     }
 
 private:
     int websiteCnt;
-    vector<string> map;
-} websiteMap;
+    vector<string> dict;  //总词典
+
+} websiteDict;
 //去掉收尾空格
 string& clearHeadTailSpace(string& str) {
     if(str.empty()) {
@@ -128,11 +136,21 @@ string& clearHeadTailSpace(string& str) {
     str.erase(str.find_last_not_of(" ") + 1);
     return str;
 }
-
+//记时功能，便于效率分析
+clock_t startTime, endTime;
+void checkTime(bool print) {
+    endTime = clock();
+    if(print)
+        cerr << " -> stage time use:" << ((double)(endTime - startTime) / CLOCKS_PER_SEC) << endl;
+    startTime = clock();
+}
 int main() {
-    freopen("./Input_data/data.in", "r", stdin);
-    freopen("./Output_data/data.out", "w", stdout);
-
+    // freopen("./Input_data/data.in", "r", stdin);
+    // freopen("./Output_data/data.out", "w", stdout);
+    // 控制台显示乱码纠正
+    /////
+    checkTime(0);
+    /////
     int pageID = 0;
     ifstream inText(TEXT_PATH);
     ofstream outTempIndex;
@@ -154,7 +172,7 @@ int main() {
         }
         pageID++;
         cerr << "now website:" << pageID << endl;
-        websiteMap.push_back(herf);
+        websiteDict.push_back(herf);
 
         //处理标题
         // getline(inText, title);
@@ -167,13 +185,15 @@ int main() {
 
         //处理正文
         getline(inText, word);
+        cout << word;
         clearHeadTailSpace(word);
         while(1) {
             if(word == "|")
                 break;
             vector<string> res = wordSeg.segmentation(word);
             for(auto nowWord: res) {
-                outTempIndex << wordMap.getID(nowWord) << "\t" << pageID << "\n";
+                // cerr << nowWord << endl;
+                outTempIndex << wordDict.getID(nowWord) << "\t" << pageID << "\n";
             }
 
             getline(inText, word);
@@ -181,8 +201,18 @@ int main() {
         }
         getline(inText, id);
     }
+
     outTempIndex.close();
-    wordMap.saveToFile();
-    websiteMap.saveToFile();
+    /////
+    checkTime(1);
+    /////
+
+    wordDict.saveToFile();
+    websiteDict.saveToFile();
+
+    /////
+    checkTime(1);
+    /////
+
     return 0;
 }
