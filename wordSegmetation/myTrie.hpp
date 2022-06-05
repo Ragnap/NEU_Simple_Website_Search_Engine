@@ -32,7 +32,7 @@ public:
         root = new TrieNode();
     }
     //将字符串插入到Trie树中
-    void insert(const string& x) {
+    void insert(const string& x, int id = 0) {
         TrieNode* u = root;
         int v;
         for(int i = 0; i < x.length(); i++) {
@@ -42,6 +42,7 @@ public:
             u = u->son[v];
         }
         u->end = 1;
+        u->id = id;
     }
     //检查字符串是否在Trie树中
     bool check(const string& x) {
@@ -65,7 +66,10 @@ public:
                 return -1;
             u = u->son[v];
         }
-        return u->id;
+        if(u->end)
+            return u->id;
+        else
+            return -1;
     }
 
 private:

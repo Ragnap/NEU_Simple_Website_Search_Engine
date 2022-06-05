@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <windows.h>
 using namespace std;
 // jieba词典路径
 const char* const DICT_PATH = "./simple_website_search_engine/wordSegmetation/cppjieba/dict/jieba.dict.utf8";  //最大概率法分词所使用的词典路径
@@ -67,20 +68,13 @@ public:
         wordCnt = 0;
         dict.clear();
     }
-    //查询是否在映射表里，在的话返回对应编号，否则返回0
-    int find(string word) {
-        for(int i = 0; i < wordCnt; i++) {
-            if(word == dict[i])
-                return i + 1;
-        }
-        return -1;
-    }
-    //获取一个单词的编号
+    //获取一个单词的编号,在单词未出现时自动添加
     int getID(string word) {
-        int ID = find(word);
+        int ID = wordTrie.query(word);
         if(ID == -1) {
             dict.push_back(word);
-            return ++wordCnt;
+            wordTrie.insert(word, ++wordCnt);
+            return wordCnt;
         }
         else
             return ID;
@@ -98,7 +92,7 @@ public:
 private:
     int wordCnt;
     vector<string> dict;  //总词典
-
+    Trie wordTrie;  //建立单词与编号的字典树
 } wordDict;
 //储存网站和网站编号的映射
 class WebsiteMap {
@@ -147,7 +141,7 @@ void checkTime(bool print) {
 int main() {
     // freopen("./Input_data/data.in", "r", stdin);
     // freopen("./Output_data/data.out", "w", stdout);
-    // 控制台显示乱码纠正
+    std::ios::sync_with_stdio(false);
     /////
     checkTime(0);
     /////
@@ -164,7 +158,7 @@ int main() {
         //读取链接
         getline(inText, herf);
         //对应到网站编号
-        if(pageID % PAGE_PER_FILE == 0) {  //每30个网页用一个文件
+        if(pageID % PAGE_PER_FILE == 0) {  //根据前面定义的宏确定一个文件中的网页个数
             outTempIndex.close();
             string targetFile = OUTPUT_TEMP_TEXT_PATH + to_string(pageID / PAGE_PER_FILE) + ".txt";
             cerr << "at file: " << targetFile << endl;
@@ -185,17 +179,14 @@ int main() {
 
         //处理正文
         getline(inText, word);
-        cout << word;
         clearHeadTailSpace(word);
         while(1) {
             if(word == "|")
                 break;
             vector<string> res = wordSeg.segmentation(word);
             for(auto nowWord: res) {
-                // cerr << nowWord << endl;
                 outTempIndex << wordDict.getID(nowWord) << "\t" << pageID << "\n";
             }
-
             getline(inText, word);
             clearHeadTailSpace(word);
         }
