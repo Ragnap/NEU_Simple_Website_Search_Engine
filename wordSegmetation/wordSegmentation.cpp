@@ -15,7 +15,7 @@ const char* const STOP_WORD_PATH = "./simple_website_search_engine/wordSegmetati
 const char* const REMOVE_WORD_PATH = "./simple_website_search_engine/wordSegmetation/cppjieba/dict/REMOVE_words.utf8";  //无意义词路径
 //数据文件储存路径
 const char* const TEXT_PATH = "./simple_website_search_engine/websiteText.txt";  //文本路径
-const char* const OUTPUT_TEMP_TEXT_PATH = "./simple_website_search_engine/tempIndex/tempIndex";  //临时索引文件夹路径
+const char* const TEMP_INDEX_PATH = "./simple_website_search_engine/tempIndex/tempIndex";  //临时索引文件夹路径
 const char* const WORD_DICT_PATH = "./simple_website_search_engine/mapWord.txt";  //单词编号文件
 const char* const WEBSITE_DICT_PATH = "./simple_website_search_engine/mapWebsite.txt";  //网站编号文件
 #define REMOVE_MEANLESS_WORD 1  //当值为1时移除无意义词
@@ -160,7 +160,7 @@ int main() {
         //对应到网站编号
         if(pageID % PAGE_PER_FILE == 0) {  //根据前面定义的宏确定一个文件中的网页个数
             outTempIndex.close();
-            string targetFile = OUTPUT_TEMP_TEXT_PATH + to_string(pageID / PAGE_PER_FILE) + ".txt";
+            string targetFile = TEMP_INDEX_PATH + to_string(pageID / PAGE_PER_FILE) + ".txt";
             cerr << "at file: " << targetFile << endl;
             outTempIndex.open(targetFile);
         }
