@@ -66,17 +66,17 @@ public:
             }
             tempInedxFile.close();
             fileID++;
+            fileSize++;
         }
     }
     // 对所有文件进行败者树优化的k路外部合并排序
     void mergeFilesSort() {
-        fileSize = 1;
         ofstream exteriorIndexFile(EXTERIOR_INDEX_PATH);
         initTree();
         int minData = treeLess[1];
         int lastWordID = -1;  //上一个单词的编号
         while(data[minData].first != INT_MAX) {
-            cerr << "choose file: " << minData << "  " << data[minData].first << ":" << data[minData].second << endl;
+            // cerr << "choose file: " << minData << "  " << data[minData].first << ":" << data[minData].second << endl;
             if(data[minData].first != lastWordID) {  //新的单词
                 exteriorIndexFile << endl << data[minData].first << "\t\t";
                 lastWordID = data[minData].first;
@@ -85,17 +85,18 @@ public:
             updateTree(minData);
             minData = treeLess[1];
         }
+        for(int i = 0; i < fileSize; i++) {
+            tempInedxFile[i].close();
+        }
     }
 
     // 初始化败者树
     void initTree() {
         for(int i = 0; i < fileSize; i++) {
-            ifstream tempInedxFile(TEMP_INDEX_PATH + to_string(i) + "_sorted.txt");
-            tempInedxFile >> data[i].first >> data[i].second;
-            // lastPos[i] = tempInedxFile.tellg();
-            lastPos[i] = 6;
-            tempInedxFile.clear();
-            tempInedxFile.close();
+            tempInedxFile[i].open(TEMP_INDEX_PATH + to_string(i) + "_sorted.txt");
+        }
+        for(int i = 0; i < fileSize; i++) {
+            tempInedxFile[i] >> data[i].first >> data[i].second;
         }
         buildTree(1, 0, fileSize - 1);
     }
@@ -120,18 +121,14 @@ public:
     // 更新败者树节点值
     void updateTree(int fileID) {
         //更新叶子节点值
-        ifstream tempInedxFile(TEMP_INDEX_PATH + to_string(fileID) + "_sorted.txt");
-        tempInedxFile.seekg(lastPos[fileID], ios::beg);
-        if(tempInedxFile >> data[fileID].first >> data[fileID].second) {  //成功读入
-            //保存输入位置
-            lastPos[fileID] = tempInedxFile.tellg();
+        int wordID;
+        if(tempInedxFile[fileID] >> wordID) {  //成功读入
+            data[fileID].first = wordID;
+            tempInedxFile[fileID] >> data[fileID].second;
         }
         else {  //读入失败
             data[fileID].first = data[fileID].second = INT_MAX;
         }
-        tempInedxFile.clear();
-        tempInedxFile.close();
-
         //更新树上节点值
         int now = inTree[fileID] >> 1;
         int nowLess = fileID;
@@ -191,7 +188,8 @@ private:
 
     // 用于外部排序时记录文件读取的位置
     // streampos lastPos[TREE_SIZE];
-    int lastPos[TREE_SIZE];
+    // int lastPos[TREE_SIZE];
+    ifstream tempInedxFile[TREE_SIZE];
     //  维护文件在树中的节点下标
     int inTree[TREE_SIZE];
 
@@ -202,7 +200,11 @@ private:
     int treeLess[TREE_SIZE << 1];
 } mysort;
 int main() {
+    checkTime(0);
+    mysort.signalFileSort();
+    checkTime(1);
     mysort.mergeFilesSort();
+    checkTime(1);
     system("pause");
     return 0;
 }
