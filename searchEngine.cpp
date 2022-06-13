@@ -237,6 +237,9 @@ int main() {
         else if(option == "3") {
             changeShowNum();
         }
+        else if(option=="4"){
+        	break;
+		} 
         else
             showError = 1;
     }
