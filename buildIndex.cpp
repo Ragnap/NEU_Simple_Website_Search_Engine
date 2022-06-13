@@ -1,14 +1,8 @@
-#include <algorithm>
-#include <cstdio>
-#include <cstring>
-#include <ctime>
-#include <fstream>
-#include <iostream>
-#include <vector>
+//
+// 构建倒序索引
+//
+#include "base.hpp"
 using namespace std;
-const char* const TEMP_INDEX_PATH = "./simple_website_search_engine/tempIndex/tempIndex";  //临时索引文件夹路径
-const char* const EXTERIOR_INDEX_PATH = "./simple_website_search_engine/exteriorIndex.txt";  //倒序索引文件路径
-
 #define MAX_SIZE 100000
 #define TREE_SIZE 100  //叶子节点数量
 
@@ -78,7 +72,11 @@ public:
         while(data[minData].first != INT_MAX) {
             // cerr << "choose file: " << minData << "  " << data[minData].first << ":" << data[minData].second << endl;
             if(data[minData].first != lastWordID) {  //新的单词
-                exteriorIndexFile << endl << data[minData].first << "\t\t";
+                if(lastWordID == -1)  //第一行不换行
+                    exteriorIndexFile << data[minData].first << "\t";
+                else
+                    exteriorIndexFile << endl << data[minData].first << "\t";
+
                 lastWordID = data[minData].first;
             }
             exteriorIndexFile << data[minData].second << " ";
@@ -205,6 +203,5 @@ int main() {
     checkTime(1);
     mysort.mergeFilesSort();
     checkTime(1);
-    system("pause");
     return 0;
 }
