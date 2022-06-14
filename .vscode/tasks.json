@@ -42,13 +42,6 @@
 			"options": {
 				"cwd": "${workspaceFolder}"
 			}
-		},
-		{
-			"label": "Build",
-			"dependsOn": [
-				"Client Build",
-				"Server Build"
-			]
 		}
 	]
 }

@@ -3,6 +3,14 @@
 //
 #include "base.hpp"
 using namespace std;
+//记时功能，便于效率分析
+clock_t startTime, endTime;
+void checkTime(bool print) {
+    endTime = clock();
+    if(print)
+        cerr << " -> stage time use:" << ((double)(endTime - startTime) / CLOCKS_PER_SEC) << endl;
+    startTime = clock();
+}
 // 输入分词器
 WordSegmentation* wordSeg = nullptr;
 // 储存单词和单词编号的映射用于生成用户输入的编号文件
@@ -72,12 +80,13 @@ void getWordsID() {
     }
     inputWordID.close();
 }
+
 // 进行查找
 void getResult() {
     system("getSearchResult.exe");
 }
 // 输出搜索结果
-void showResult(bool showDetail) {
+void showResult() {
     ifstream result(RESULT_PATH);
     int relativeNum;  //有关的网页数量
     result >> relativeNum;
@@ -88,7 +97,7 @@ void showResult(bool showDetail) {
     }
     else {
         string header, input, temp;
-        header = "共有 " + to_string(relativeNum) + " 个相关网页";
+        header = "搜索用时 " + to_string((double)(endTime - startTime)) + " ms , 共有 " + to_string(relativeNum) + " 个相关网页";
         vector<int> matchWebsite;  //按照搜索顺序保存的网页的编号
         int ID;  //当前网页编号
         for(int i = 0; i < relativeNum; i++) {
@@ -224,22 +233,26 @@ int main() {
         cin >> option;
         if(option == "1") {
             inputDividedWord();
+            startTime = clock();
             getWordsID();
             getResult();
-            showResult(1);
+            endTime = clock();
+            showResult();
         }
         else if(option == "2") {
             inputSentence();
+            startTime = clock();
             getWordsID();
             getResult();
-            showResult(0);  //分词产生部分重复，不显示具体分词多少
+            endTime = clock();
+            showResult();
         }
         else if(option == "3") {
             changeShowNum();
         }
-        else if(option=="4"){
-        	break;
-		} 
+        else if(option == "4") {
+            break;
+        }
         else
             showError = 1;
     }

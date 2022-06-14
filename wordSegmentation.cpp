@@ -100,7 +100,7 @@ void checkTime(bool print) {
 int main() {
     // freopen("./Input_data/data.in", "r", stdin);
     // freopen("./Output_data/data.out", "w", stdout);
-    system("chcp 65001");
+    // system("chcp 65001");
     std::ios::sync_with_stdio(false);
     /////
     checkTime(0);

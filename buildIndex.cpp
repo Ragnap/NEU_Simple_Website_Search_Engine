@@ -27,6 +27,9 @@ struct Index {
             return second < x.second;
     }
 };
+bool cmp(Index a, Index b) {
+    return a < b;
+}
 // 倒序索引生成器类
 class exteriorSort {
 public:
@@ -203,5 +206,6 @@ int main() {
     checkTime(1);
     mysort.mergeFilesSort();
     checkTime(1);
+    getchar();
     return 0;
 }
