@@ -149,8 +149,6 @@ public:
     }
 
 private:
-    // 文件总数
-    int fileSize;
     // 基数排序
     void radixSort(int len) {
         int wid = 1;
@@ -186,7 +184,8 @@ private:
     // 用于储存排序用的索引
     Index data[MAX_SIZE];
     Index temp[MAX_SIZE];
-
+    // 文件总数
+    int fileSize;
     // 用于外部排序时记录文件读取的位置
     // streampos lastPos[TREE_SIZE];
     // int lastPos[TREE_SIZE];

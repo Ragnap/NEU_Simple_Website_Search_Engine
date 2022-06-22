@@ -101,7 +101,6 @@ int main() {
     // freopen("./Input_data/data.in", "r", stdin);
     // freopen("./Output_data/data.out", "w", stdout);
     // system("chcp 65001");
-    std::ios::sync_with_stdio(false);
     /////
     checkTime(0);
     /////
@@ -126,15 +125,6 @@ int main() {
         }
         pageID++;
         // cerr << "now website:" << pageID << endl;
-
-        //处理标题
-        // getline(inText, title);
-        // outTempIndex << "title:" << endl << " -> ";
-        // vector<string> res = wordSeg.segmentation(title);
-        // for(auto nowWord: res) {
-        //     outTempIndex << nowWord << " ";
-        // }
-        // outTempIndex << endl;
 
         // 获取标题
         getline(inText, word);

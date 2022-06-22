@@ -56,45 +56,20 @@ void buildWordTabel() {
     }
     exteriorIndex.close();
 }
-// 遍历每一个网页编号，更新每个网页的权值，利用二分查找确定它含多少个带检索单词
+
+// 遍历每一个网页编号，更新每个网页的权值，通过简单遍历单词的网页列表实现
 void searchWord(int wordID) {
     if(wordID < 1 || wordID >= WORD_SIZE)  //单词编号不在单词表里
         return;
-    int l, r, mid;  //二分查找变量
-    int end = wordTabel[wordID].size() + 1;  //二分的最大右界，也表示不存在
-    int upper;  //上界（最后一个等于待查找值的下标）
-    int lower;  //下界（第一个等于待查找值的下标）
-    for(int websiteID = 1; websiteID <= websiteNum; websiteID++) {
-        // 找到下界，第一个等于 websiteID 的网页编号
-        l = 0, r = end;
-        while(l < r) {
-            mid = (l + r) >> 1;
-            if(wordTabel[wordID][mid] >= websiteID)
-                r = mid;
-            else
-                l = mid + 1;
-        }
-        lower = l;
-        // 找到上界，第一个大于 websiteID 的网页编号
-        l = 0, r = end;
-        while(l < r) {
-            mid = (l + r) >> 1;
-            if(wordTabel[wordID][mid] > websiteID)
-                r = mid;
-            else
-                l = mid + 1;
-        }
-        upper = l;
-        // [lower,upper) 这个左闭右开区间内的值全部等于websiteID
-        if(upper <= lower) {  //区间长度为0，未找到
-            // cerr << "no wordID:" << websiteID << endl;
-            continue;
-        }
-        else {
-            // cerr << websiteID << ":" << lower << "~" << upper << endl;
-            website[websiteID].wordKind++;  //增加种类
-            website[websiteID].wordTime += upper - lower;  //区间长度就是出现次数
-        }
+    //根据倒排索引对单词出现过的网页进行加权
+    for(int i = 0; i < wordTabel[wordID].size(); i++) {
+        if(wordTabel[wordID][i] == 0x7fffffff)  //到最后的结束标记终止符退出
+            break;
+        //与后一个网页不同时，表示是这一个网页最后一次出现,此时增加种类数，保证只增加一次
+        if(wordTabel[wordID][i] != wordTabel[wordID][i + 1])
+            website[wordTabel[wordID][i]].wordKind++;
+        //出现次数增加
+        website[wordTabel[wordID][i]].wordTime++;
     }
 }
 // 归并排序 [l,r) 区间
